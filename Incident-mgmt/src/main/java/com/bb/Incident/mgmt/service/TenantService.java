@@ -8,6 +8,8 @@ import com.bb.Incident.mgmt.response.TenantResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -29,10 +31,19 @@ public class TenantService {
     @Autowired
     private IncidentService incidentService;
 
-    public List<TenantResponse> getAllTenants() {
+//    public List<TenantResponse> getAllTenants() {
+//        try {
+//            List<Tenant> tenants = tenantRepository.findAll();
+//            return tenants.stream().map(this::convertToResponse).collect(Collectors.toList());
+//        } catch (DataAccessException ex) {
+//            throw new DatabaseConnectionException("Failed to connect to the database.");
+//        }
+//    }
+
+    public Page<TenantResponse> getAllTenants(Pageable pageable) {
         try {
-            List<Tenant> tenants = tenantRepository.findAll();
-            return tenants.stream().map(this::convertToResponse).collect(Collectors.toList());
+            Page<Tenant> tenants = tenantRepository.findAll(pageable);
+            return tenants.map(this::convertToResponse);
         } catch (DataAccessException ex) {
             throw new DatabaseConnectionException("Failed to connect to the database.");
         }

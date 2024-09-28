@@ -8,10 +8,15 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/v1/incidents")
@@ -20,11 +25,38 @@ public class IncidentController {
     @Autowired
     private IncidentService incidentService;
 
-    @Operation(summary = "Get all incidents", description = "Returns a list of all incidents")
+//    @Operation(summary = "Get all incidents", description = "Returns a list of all incidents")
+//    @GetMapping
+//    @PreAuthorize("hasAuthority('incident.get')")
+//    public List<IncidentResponse> getAllIncidents() {
+//        return incidentService.getAllIncidents();
+//    }
+
+//    @Operation(summary = "Get all incidents", description = "Returns a list of all incidents")
+//    @GetMapping
+//    @PreAuthorize("hasAuthority('incident.get')")
+//    public Page<IncidentResponse> getAllIncidents(@PageableDefault(size = 5) Pageable pageable) {
+//        return incidentService.getAllIncidents(pageable);
+//    }
+
+    @Operation(summary = "Get all incidents", description = "Returns a paginated list of all incidents")
     @GetMapping
-    @PreAuthorize("hasAuthority('incident.get')")
-    public List<IncidentResponse> getAllIncidents() {
-        return incidentService.getAllIncidents();
+    public Map<String, Object> getAllIncidents(@PageableDefault(size = 5) Pageable pageable) {
+        Page<IncidentResponse> page = incidentService.getAllIncidents(pageable);
+        Map<String, Object> response = new HashMap<>();
+        response.put("incidents", page.getContent());
+        response.put("currentPage", page.getNumber());
+        response.put("totalItems", page.getTotalElements());
+        response.put("totalPages", page.getTotalPages());
+
+        if (page.hasNext()) {
+            response.put("nextPage", "/v1/incidents?page=" + (page.getNumber() + 1) + "&size=" + page.getSize());
+        }
+        if (page.hasPrevious()) {
+            response.put("previousPage", "/v1/incidents?page=" + (page.getNumber() - 1) + "&size=" + page.getSize());
+        }
+
+        return response;
     }
 
     @Operation(summary = "Get incident with UUID", description = "Returns the incident with UUID")

@@ -11,6 +11,8 @@ import com.bb.Incident.mgmt.request.UpdateUserRequest;
 import com.bb.Incident.mgmt.response.UserResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,10 +28,19 @@ public class UserService {
     @Autowired
     private TenantRepository tenantRepository;
 
-    public List<UserResponse> getAllUsers() {
+//    public List<UserResponse> getAllUsers() {
+//        try {
+//            List<User> users = userRepository.findAll();
+//            return users.stream().map(this::convertToResponse).collect(Collectors.toList());
+//        } catch (DataAccessException ex) {
+//            throw new DatabaseConnectionException("Failed to connect to the database.");
+//        }
+//    }
+
+    public Page<UserResponse> getAllUsers(Pageable pageable) {
         try {
-            List<User> users = userRepository.findAll();
-            return users.stream().map(this::convertToResponse).collect(Collectors.toList());
+            Page<User> users = userRepository.findAll(pageable);
+            return users.map(this::convertToResponse);
         } catch (DataAccessException ex) {
             throw new DatabaseConnectionException("Failed to connect to the database.");
         }

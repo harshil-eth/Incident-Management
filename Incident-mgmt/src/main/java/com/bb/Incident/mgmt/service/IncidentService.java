@@ -15,6 +15,8 @@ import com.bb.Incident.mgmt.response.IncidentResponse;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,13 +36,22 @@ public class IncidentService {
     @Autowired
     private UserRepository userRepository;
 
-    public List<IncidentResponse> getAllIncidents() {
-        try {
-            List<Incident> incidents = incidentRepository.findAll();
-            return incidents.stream().map(this::convertToResponse).collect(Collectors.toList());
-        } catch (DataAccessException ex) {
-            throw new DatabaseConnectionException("Failed to connect to the database.");
-        }
+//    public List<IncidentResponse> getAllIncidents() {
+//        try {
+//            List<Incident> incidents = incidentRepository.findAll();
+//            return incidents.stream().map(this::convertToResponse).collect(Collectors.toList());
+//        } catch (DataAccessException ex) {
+//            throw new DatabaseConnectionException("Failed to connect to the database.");
+//        }
+//    }
+
+    public Page<IncidentResponse> getAllIncidents(Pageable pageable) {
+       try {
+            Page<Incident> incidents = incidentRepository.findAll(pageable);
+            return incidents.map(this::convertToResponse);
+       } catch (DataAccessException ex) {
+           throw new DatabaseConnectionException("Failed to connect to the database.");
+       }
     }
 
     public IncidentResponse getIncidentByUuid(String uuid) {

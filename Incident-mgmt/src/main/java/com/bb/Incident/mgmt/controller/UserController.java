@@ -7,6 +7,8 @@ import com.bb.Incident.mgmt.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -18,10 +20,36 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+//    @Operation(summary = "Get all users", description = "Returns a list of all users")
+//    @GetMapping
+//    public List<UserResponse> getAllUsers() {
+//        return userService.getAllUsers();
+//    }
+
+//    @Operation(summary = "Get all users", description = "Returns a list of all users")
+//    @GetMapping
+//    public Page<UserResponse> getAllUsers(@PageableDefault(size = 5) Pageable pageable) {
+//        return userService.getAllUsers(pageable);
+//    }
+
     @Operation(summary = "Get all users", description = "Returns a list of all users")
     @GetMapping
-    public List<UserResponse> getAllUsers() {
-        return userService.getAllUsers();
+    public Map<String, Object> getAllUsers(Pageable pageable) {
+        Page<UserResponse> page = userService.getAllUsers(pageable);
+        Map<String, Object> response = new HashMap<>();
+        response.put("users", page.getContent());
+        response.put("currentPage", page.getNumber());
+        response.put("totalItems", page.getTotalElements());
+        response.put("totalPages", page.getTotalPages());
+
+        if (page.hasNext()) {
+            response.put("nextPage", "/v1/users?page=" + (page.getNumber() + 1) + "&size=" + page.getSize());
+        }
+        if (page.hasPrevious()) {
+            response.put("previousPage", "/v1/users?page=" + (page.getNumber() - 1) + "&size=" + page.getSize());
+        }
+
+        return response;
     }
 
     @Operation(summary = "Get user with UUID", description = "Returns the user with UUID")
