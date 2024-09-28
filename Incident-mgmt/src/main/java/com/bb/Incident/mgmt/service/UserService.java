@@ -68,17 +68,17 @@ public class UserService {
 
     @Transactional
     public UserResponse createUser(User user) {
-        if(user.getTenant() == null || user.getTenant().getUuid() == null) {
+        if (user.getTenant() == null || user.getTenant().getUuid() == null) {
             throw new IllegalArgumentException("Tenant information is missing");
         }
 
-        Tenant tenant = tenantRepository.findByUuid(user.getTenant().getUuid());
-        if(tenant == null) {
-            throw new IllegalArgumentException("Invalid tenant UUID");
+        if (userRepository.existsByUsername(user.getUsername())) {
+            throw new UserAlreadyExistsException("User already exists with username: " + user.getUsername());
         }
 
-        if(userRepository.existsByUsername(user.getUsername())) {
-            throw new UserAlreadyExistsException("User already exists with the username: " + user.getUsername());
+        Tenant tenant = tenantRepository.findByUuid(user.getTenant().getUuid());
+        if (tenant == null) {
+            throw new IllegalArgumentException("Invalid tenant UUID");
         }
 
         user.setTenant(tenant);
@@ -86,6 +86,7 @@ public class UserService {
 
         return convertToResponse(savedUser);
     }
+
 
     @Transactional
     public UserResponse updateUser(String uuid, UpdateUserRequest updateUserRequest) {
