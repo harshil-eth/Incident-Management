@@ -12,10 +12,18 @@ import com.bb.Incident.mgmt.repository.TenantRepository;
 import com.bb.Incident.mgmt.repository.UserRepository;
 import com.bb.Incident.mgmt.request.UpdateIncidentRequest;
 import com.bb.Incident.mgmt.response.IncidentResponse;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Predicate;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +44,9 @@ public class IncidentService {
     @Autowired
     private UserRepository userRepository;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
 //    public List<IncidentResponse> getAllIncidents() {
 //        try {
 //            List<Incident> incidents = incidentRepository.findAll();
@@ -45,13 +56,50 @@ public class IncidentService {
 //        }
 //    }
 
-    public Page<IncidentResponse> getAllIncidents(Pageable pageable) {
-       try {
-            Page<Incident> incidents = incidentRepository.findAll(pageable);
-            return incidents.map(this::convertToResponse);
-       } catch (DataAccessException ex) {
-           throw new DatabaseConnectionException("Failed to connect to the database.");
-       }
+//    public Page<IncidentResponse> getAllIncidents(Pageable pageable) {
+//       try {
+//            Page<Incident> incidents = incidentRepository.findAll(pageable);
+//            return incidents.map(this::convertToResponse);
+//       } catch (DataAccessException ex) {
+//           throw new DatabaseConnectionException("Failed to connect to the database.");
+//       }
+//    }
+
+    public Page<IncidentResponse> getAllIncidents(Pageable pageable, String incidentType, String severity, String state, String priority) {
+        try {
+            CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+            CriteriaQuery<Incident> criteriaQuery = criteriaBuilder.createQuery(Incident.class);
+            Root<Incident> root = criteriaQuery.from(Incident.class);
+
+            List<Predicate> predicates = new ArrayList<>();
+            if (incidentType != null) {
+                predicates.add(criteriaBuilder.equal(root.get("incidentType"), incidentType));
+            }
+            if (severity != null) {
+                predicates.add(criteriaBuilder.equal(root.get("severity"), severity));
+            }
+            if (state != null) {
+                predicates.add(criteriaBuilder.equal(root.get("state"), state));
+            }
+            if(priority != null) {
+                predicates.add(criteriaBuilder.equal(root.get("priority"), priority));
+            }
+
+            criteriaQuery.where(criteriaBuilder.and(predicates.toArray(new Predicate[0])));
+
+            List<Incident> incidents = entityManager.createQuery(criteriaQuery)
+                    .setFirstResult((int) pageable.getOffset())
+                    .setMaxResults(pageable.getPageSize())
+                    .getResultList();
+
+            long total = entityManager.createQuery(criteriaQuery).getResultList().size();
+
+            Page<Incident> incidentPage = new PageImpl<>(incidents, pageable, total);
+
+            return incidentPage.map(this::convertToResponse);
+        } catch (DataAccessException ex) {
+            throw new DatabaseConnectionException("Failed to connect to the database.");
+        }
     }
 
     public IncidentResponse getIncidentByUuid(String uuid) {
@@ -79,37 +127,6 @@ public class IncidentService {
         response.setAssignedToUserId(incident.getAssignedToUser() != null ? incident.getAssignedToUser().getUuid() : null); // SETTING assignedToUserId
         return response;
     }
-
-//    public IncidentResponse convertToResponse(Incident incident) {
-//        if (incident == null) {
-//            return null;
-//        }
-//
-//        IncidentResponse response = new IncidentResponse();
-//        response.setUuid(incident.getUuid());
-//        response.setIncidentType(incident.getIncidentType());
-//        response.setDescription(incident.getDescription());
-//        response.setSeverity(incident.getSeverity());
-//        response.setState(incident.getState());
-//        response.setDateReported(incident.getDateReported());
-//        response.setDevice(incident.getDevice());
-//        response.setLocation(incident.getLocation());
-//        response.setDateResolved(incident.getDateResolved());
-//        response.setPriority(incident.getPriority());
-//
-//        Tenant reportedByTenant = incident.getReportedByTenant();
-//        if (reportedByTenant != null) {
-//            response.setReportedByTenantId(reportedByTenant.getUuid());
-//        } else {
-//            response.setReportedByTenantId(null); // or handle this case as needed
-//        }
-//
-//        response.setAssignedToUserId(incident.getAssignedToUserId());
-//        response.setSha256(incident.getSha256());
-//
-//        return response;
-//    }
-
 
     @Transactional // as we are transacting
     public Incident createIncident(Incident incident) {
