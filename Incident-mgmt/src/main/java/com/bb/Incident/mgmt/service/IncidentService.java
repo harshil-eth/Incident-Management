@@ -80,6 +80,37 @@ public class IncidentService {
         return response;
     }
 
+//    public IncidentResponse convertToResponse(Incident incident) {
+//        if (incident == null) {
+//            return null;
+//        }
+//
+//        IncidentResponse response = new IncidentResponse();
+//        response.setUuid(incident.getUuid());
+//        response.setIncidentType(incident.getIncidentType());
+//        response.setDescription(incident.getDescription());
+//        response.setSeverity(incident.getSeverity());
+//        response.setState(incident.getState());
+//        response.setDateReported(incident.getDateReported());
+//        response.setDevice(incident.getDevice());
+//        response.setLocation(incident.getLocation());
+//        response.setDateResolved(incident.getDateResolved());
+//        response.setPriority(incident.getPriority());
+//
+//        Tenant reportedByTenant = incident.getReportedByTenant();
+//        if (reportedByTenant != null) {
+//            response.setReportedByTenantId(reportedByTenant.getUuid());
+//        } else {
+//            response.setReportedByTenantId(null); // or handle this case as needed
+//        }
+//
+//        response.setAssignedToUserId(incident.getAssignedToUserId());
+//        response.setSha256(incident.getSha256());
+//
+//        return response;
+//    }
+
+
     @Transactional // as we are transacting
     public Incident createIncident(Incident incident) {
 

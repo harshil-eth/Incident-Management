@@ -86,6 +86,7 @@
 
 package com.bb.Incident.mgmt.config;
 
+import com.bb.Incident.mgmt.security.CustomAccessDeniedHandler;
 import com.bb.Incident.mgmt.security.JwtAuthenticationFilter;
 import com.bb.Incident.mgmt.security.JwtUtil;
 import com.bb.Incident.mgmt.service.CustomUserDetailsService;
@@ -101,8 +102,11 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
+
+import javax.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
@@ -143,6 +147,10 @@ public class SecurityConfig {
                 .httpBasic(httpBasic ->
                         httpBasic
                                 .authenticationEntryPoint(authenticationEntryPoint())
+                )
+                .exceptionHandling(exceptionHandling ->
+                        exceptionHandling
+                                .accessDeniedHandler(accessDeniedHandler()) // Custom access denied handler
                 );
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -160,5 +168,10 @@ public class SecurityConfig {
         BasicAuthenticationEntryPoint entryPoint = new BasicAuthenticationEntryPoint();
         entryPoint.setRealmName("tenant-api-realm");
         return entryPoint;
+    }
+
+    @Bean
+    public AccessDeniedHandler accessDeniedHandler() {
+        return new CustomAccessDeniedHandler();
     }
 }

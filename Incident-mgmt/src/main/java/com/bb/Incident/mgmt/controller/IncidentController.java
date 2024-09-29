@@ -41,6 +41,7 @@ public class IncidentController {
 
     @Operation(summary = "Get all incidents", description = "Returns a paginated list of all incidents")
     @GetMapping
+    @PreAuthorize("hasAuthority('incident.get')")
     public Map<String, Object> getAllIncidents(@PageableDefault(size = 5) Pageable pageable) {
         Page<IncidentResponse> page = incidentService.getAllIncidents(pageable);
         Map<String, Object> response = new HashMap<>();
