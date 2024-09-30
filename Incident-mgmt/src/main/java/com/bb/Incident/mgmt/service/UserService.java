@@ -122,4 +122,16 @@ public class UserService {
 
         userRepository.deleteByUuid(uuid);
     }
+
+    public String getRandomUser() {
+        // returns the uuid of the random user
+        List<User> users = userRepository.findAll();
+        if(users.isEmpty()) {
+            throw new UserNotFoundException("No users found in the database.");
+        }
+
+        Random random = new Random();
+        User randomUser = users.get(random.nextInt(users.size()));
+        return randomUser.getUuid();
+    }
 }

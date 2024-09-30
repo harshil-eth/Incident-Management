@@ -109,4 +109,11 @@ public class IncidentController {
     public IncidentResponse resolveIncident(@PathVariable String uuid) {
         return incidentService.resolveIncident(uuid);
     }
+
+    @Operation(summary = "Assign a user to incident", description = "Randomly assigns a user to the incident")
+    @PutMapping("/assignUser/{uuid}")
+    @PreAuthorize("hasAuthority('incident.update')")
+    public IncidentResponse assignUser(@PathVariable String uuid) {
+        return incidentService.assignUser(uuid);
+    }
 }

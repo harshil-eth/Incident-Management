@@ -3,10 +3,7 @@ package com.bb.Incident.mgmt.service;
 import com.bb.Incident.mgmt.entity.Incident;
 import com.bb.Incident.mgmt.entity.Tenant;
 import com.bb.Incident.mgmt.entity.User;
-import com.bb.Incident.mgmt.exception.DatabaseConnectionException;
-import com.bb.Incident.mgmt.exception.IncidentNotFoundException;
-import com.bb.Incident.mgmt.exception.InvalidIncidentDataException;
-import com.bb.Incident.mgmt.exception.OpenIncidentsException;
+import com.bb.Incident.mgmt.exception.*;
 import com.bb.Incident.mgmt.repository.IncidentRepository;
 import com.bb.Incident.mgmt.repository.TenantRepository;
 import com.bb.Incident.mgmt.repository.UserRepository;
@@ -43,6 +40,9 @@ public class IncidentService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserService userService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -224,6 +224,7 @@ public class IncidentService {
         // one doubt -> what to give if there are no open incidents ??
     }
 
+    @Transactional
     public IncidentResponse resolveIncident(String uuid) {
         Incident incident = incidentRepository.findByUuid(uuid);
 
@@ -233,6 +234,27 @@ public class IncidentService {
 
         incident.setState("Close");
         incident.setDateResolved(LocalDateTime.now());
+        incidentRepository.save(incident);
+
+        return convertToResponse(incident);
+    }
+
+    @Transactional
+    public IncidentResponse assignUser(String uuid) {
+        Incident incident = incidentRepository.findByUuid(uuid);
+
+        if(incident == null) {
+            throw new IncidentNotFoundException("Incident not found with UUID: " + uuid);
+        }
+
+        String randomUserUuid = userService.getRandomUser();
+        User randomUser = userRepository.findByUuid(randomUserUuid);
+
+        if(randomUser == null) {
+            throw new UserNotFoundException("User not found with UUID: " + randomUserUuid);
+        }
+
+        incident.setAssignedToUser(randomUser);
         incidentRepository.save(incident);
 
         return convertToResponse(incident);
