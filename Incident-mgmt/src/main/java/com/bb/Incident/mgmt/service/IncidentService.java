@@ -12,6 +12,7 @@ import com.bb.Incident.mgmt.response.IncidentResponse;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
@@ -22,6 +23,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.converter.json.GsonBuilderUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +48,10 @@ public class IncidentService {
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    public IncidentService() {
+        System.out.println("Entity Manager: " + entityManager);
+    }
 
 //    public List<IncidentResponse> getAllIncidents() {
 //        try {
@@ -87,6 +93,16 @@ public class IncidentService {
 
             criteriaQuery.where(criteriaBuilder.and(predicates.toArray(new Predicate[0])));
 
+            // Debugging statements
+            System.out.println("CriteriaQuery: " + criteriaQuery);
+            System.out.println("Predicates: " + predicates);
+
+            // Create the TypedQuery
+            TypedQuery<Incident> query = entityManager.createQuery(criteriaQuery);
+            if (query == null) {
+                throw new IllegalStateException("TypedQuery is null");
+            }
+
             List<Incident> incidents = entityManager.createQuery(criteriaQuery)
                     .setFirstResult((int) pageable.getOffset())
                     .setMaxResults(pageable.getPageSize())
@@ -110,7 +126,34 @@ public class IncidentService {
         return convertToResponse(incident);
     }
 
+//    public IncidentResponse convertToResponse(Incident incident) {
+//
+//        if(incident == null) {
+//            throw new IllegalArgumentException("Incident cannot be null");
+//        }
+//
+//        IncidentResponse response = new IncidentResponse();
+//        response.setUuid(incident.getUuid());
+//        response.setIncidentType(incident.getIncidentType());
+//        response.setDescription(incident.getDescription());
+//        response.setSeverity(incident.getSeverity());
+//        response.setState(incident.getState());
+//        response.setDevice(incident.getDevice());
+//        response.setLocation(incident.getLocation());
+//        response.setPriority(incident.getPriority());
+//        response.setSha256(incident.getSha256());
+//        response.setDateReported(incident.getDateReported());
+//        response.setDateResolved(incident.getDateResolved());
+//        response.setReportedByTenantId(incident.getReportedByTenant().getUuid()); // SETTING reportedByTenantId
+//        response.setAssignedToUserId(incident.getAssignedToUser() != null ? incident.getAssignedToUser().getUuid() : null); // SETTING assignedToUserId
+//        return response;
+//    }
+
     public IncidentResponse convertToResponse(Incident incident) {
+        if (incident == null) {
+            throw new IllegalArgumentException("Incident cannot be null");
+        }
+
         IncidentResponse response = new IncidentResponse();
         response.setUuid(incident.getUuid());
         response.setIncidentType(incident.getIncidentType());
@@ -123,10 +166,26 @@ public class IncidentService {
         response.setSha256(incident.getSha256());
         response.setDateReported(incident.getDateReported());
         response.setDateResolved(incident.getDateResolved());
-        response.setReportedByTenantId(incident.getReportedByTenant().getUuid()); // SETTING reportedByTenantId
-        response.setAssignedToUserId(incident.getAssignedToUser() != null ? incident.getAssignedToUser().getUuid() : null); // SETTING assignedToUserId
+
+        // Error handling for reportedByTenant
+        Tenant reportedByTenant = incident.getReportedByTenant();
+        if (reportedByTenant != null) {
+            response.setReportedByTenantId(reportedByTenant.getUuid());
+        } else {
+            response.setReportedByTenantId(null); // or handle this case as needed
+        }
+
+        // Error handling for assignedToUser
+        User assignedToUser = incident.getAssignedToUser();
+        if (assignedToUser != null) {
+            response.setAssignedToUserId(assignedToUser.getUuid());
+        } else {
+            response.setAssignedToUserId(null); // or handle this case as needed
+        }
+
         return response;
     }
+
 
     @Transactional // as we are transacting
     public Incident createIncident(Incident incident) {
