@@ -150,9 +150,12 @@ public class IncidentServiceTest {
 //        // Call the createIncident method
 //        Incident createdIncident = incidentService.createIncident(incident);
 //
+//        System.out.println("hi" + incident);
+//        System.out.println("hii" + createdIncident);
+//
 //        // Assertions
 //        assertNotNull(createdIncident);
-//        assertNotNull(createdIncident.getId());
+//        assertNotNull(createdIncident.getUuid());
 //        assertEquals("Network Issue", createdIncident.getIncidentType());
 //        assertEquals("Internet connectivity is down", createdIncident.getDescription());
 //        assertEquals("High", createdIncident.getSeverity());
@@ -164,7 +167,6 @@ public class IncidentServiceTest {
 //        assertEquals("tenant-uuid", createdIncident.getReportedByTenant().getUuid());
 //        assertEquals("user-uuid", createdIncident.getAssignedToUser().getUuid());
 //    }
-
 
     @Test
     public void testUpdateIncident() {

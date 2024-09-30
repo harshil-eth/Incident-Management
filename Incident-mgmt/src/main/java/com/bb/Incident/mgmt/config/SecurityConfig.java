@@ -150,7 +150,7 @@ public class SecurityConfig {
                 )
                 .exceptionHandling(exceptionHandling ->
                         exceptionHandling
-                                .accessDeniedHandler(accessDeniedHandler()) // Custom access denied handler
+                                .accessDeniedHandler(accessDeniedHandler())
                 );
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

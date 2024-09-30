@@ -1,5 +1,6 @@
 package com.bb.Incident.mgmt.security;
 
+import com.bb.Incident.mgmt.exception.InvalidJwtTokenException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,9 +25,11 @@ public class JwtUtil {
 
     public String extractClaim(String token, String claim) {
         String[] parts = token.split("\\.");
+
         if (parts.length != 3) {
-            throw new IllegalArgumentException("Invalid JWT token");
+            throw new InvalidJwtTokenException("Invalid JWT token");
         }
+
         String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
         Map<String, Object> claims = parseJson(payload);
         return claims.get(claim).toString();
