@@ -73,7 +73,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
         } catch (InvalidJwtTokenException e) {
-            logger.error("Authentication error: ", e);
+            logger.error("Invalid Jwt Token: ", e);
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write(e.getMessage());
             response.getWriter().flush();
