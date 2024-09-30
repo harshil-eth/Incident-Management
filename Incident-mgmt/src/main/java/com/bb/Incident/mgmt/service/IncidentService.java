@@ -131,7 +131,8 @@ public class IncidentService {
     @Transactional // as we are transacting
     public Incident createIncident(Incident incident) {
 
-        if(incident == null || incident.getIncidentType() == null || incident.getDescription() == null) {
+        if(incident == null || incident.getIncidentType() == null || incident.getDescription() == null
+                || incident.getReportedByTenant() == null) {
             throw new InvalidIncidentDataException("Incident data is invalid.");
         }
 
