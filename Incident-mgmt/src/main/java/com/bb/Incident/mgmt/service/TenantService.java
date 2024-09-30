@@ -85,7 +85,6 @@ public class TenantService {
         tenant.setPassword(bCryptPasswordEncoder.encode(tenant.getPassword()));
 
         return convertToResponse(tenantRepository.save(tenant));
-
     }
 
     public String getTenantRolesByUsername(String username) {
