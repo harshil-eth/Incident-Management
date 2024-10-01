@@ -39,6 +39,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String username = null;
         String jwt = null;
 
+        // skip auth for these api's
+        if (request.getRequestURI().startsWith("/v1/tenants")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
             if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
                 jwt = authorizationHeader.substring(7);

@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.Base64;
 
 @Service
@@ -34,9 +35,17 @@ public class AuthService {
             throw new Exception("Missing or invalid Authorization header");
         }
 
+//        System.out.println("AuthHeader: " + authHeader);
+        // have to decode this authHeader to get the credentials
         String base64Credentials = authHeader.substring(6);
         String credentials = new String(Base64.getDecoder().decode(base64Credentials));
+
+//        System.out.println("Credentials: " + credentials);
+
         String[] values = credentials.split(":", 2);
+
+//        System.out.println("Values: " + Arrays.toString(values));
+
         String username = values[0];
         String password = values[1];
 
