@@ -306,6 +306,11 @@ public class IncidentService {
             throw new IncidentNotFoundException("Incident not found with UUID: " + uuid);
         }
 
+        // check if the user is already assigned to that incident
+        if(incident.getAssignedToUser() != null) {
+            throw new UserAlreadyExistsException("User is already assigned to this incident, and the assigned user UUID is: " + incident.getAssignedToUser().getUuid());
+        }
+
         String randomUserUuid = userService.getRandomUser();
         User randomUser = userRepository.findByUuid(randomUserUuid);
 

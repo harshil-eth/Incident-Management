@@ -69,6 +69,11 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(UserAlreadyAssignedException.class)
+    public ResponseEntity<String> handleUserAlreadyAssignedException(UserAlreadyAssignedException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.CONFLICT);
+    }
+
 //    Database Exception
 
     @ExceptionHandler(DatabaseConnectionException.class)

@@ -39,7 +39,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String username = null;
         String jwt = null;
 
-        // skip auth for these api's
+        // skip auth for these apis
+        // or if have to auth this, then ->
+        // three ways to do this, that are, through hardcode username and password, or through soc tenant only, or through pre-defined roles
+
         if (request.getRequestURI().startsWith("/v1/tenants")) {
             filterChain.doFilter(request, response);
             return;
