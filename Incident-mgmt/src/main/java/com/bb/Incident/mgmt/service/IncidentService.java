@@ -49,9 +49,9 @@ public class IncidentService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    public IncidentService() {
-        System.out.println("Entity Manager: " + entityManager);
-    }
+//    public IncidentService() {
+//        System.out.println("Entity Manager: " + entityManager);
+//    }
 
 //    public List<IncidentResponse> getAllIncidents() {
 //        try {
@@ -94,8 +94,8 @@ public class IncidentService {
             criteriaQuery.where(criteriaBuilder.and(predicates.toArray(new Predicate[0])));
 
             // Debugging statements
-            System.out.println("CriteriaQuery: " + criteriaQuery);
-            System.out.println("Predicates: " + predicates);
+//            System.out.println("CriteriaQuery: " + criteriaQuery);
+//            System.out.println("Predicates: " + predicates);
 
             // Create the TypedQuery
             TypedQuery<Incident> query = entityManager.createQuery(criteriaQuery);
