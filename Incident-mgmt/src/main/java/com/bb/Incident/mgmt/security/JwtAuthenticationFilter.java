@@ -45,6 +45,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        if(request.getRequestURI().startsWith("/v1/users")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
             if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
                 jwt = authorizationHeader.substring(7);

@@ -53,6 +53,7 @@ public class SecurityConfig {
                         authorizeRequests
                                 .requestMatchers("/v1/login/tenant").permitAll()
                                 .requestMatchers("/v1/tenants/**").permitAll()
+                                .requestMatchers("/v1/users/**").permitAll()
                                 .requestMatchers("/v1/incidents/**").hasAnyAuthority("incident.get", "incident.create", "incident.update", "incident.delete")
                                 .anyRequest().permitAll()
                 )
