@@ -1,8 +1,10 @@
 package com.bb.Incident.mgmt.service;
 
+import com.bb.Incident.mgmt.exception.AuthenticationFailedException;
 import com.bb.Incident.mgmt.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -35,7 +37,7 @@ public class AuthService {
             throw new Exception("Missing or invalid Authorization header");
         }
 
-//        System.out.println("AuthHeader: " + authHeader);
+//        System.out.println("AuthHeader: " + authHeader);  encoded value 
         // have to decode this authHeader to get the credentials
         String base64Credentials = authHeader.substring(6);
         String credentials = new String(Base64.getDecoder().decode(base64Credentials));
@@ -49,13 +51,19 @@ public class AuthService {
         String username = values[0];
         String password = values[1];
 
+        // in case of wrong username or password, its breaking before this
+        System.out.println("username:: " + username);
+        System.out.println("password:: " + password);
+
         // Authenticate tenant
         try {
+            System.out.println("bye");
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password)
             );
-        } catch (Exception e) {
-            throw new Exception("Incorrect username or password", e);
+        } catch (BadCredentialsException e) {
+            System.out.println("hii");
+            throw new AuthenticationFailedException("Incorrect username or password", e);
         }
 
         // Load tenant details
