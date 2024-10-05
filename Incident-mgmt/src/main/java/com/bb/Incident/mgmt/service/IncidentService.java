@@ -72,52 +72,13 @@ public class IncidentService {
 //       }
 //    }
 
-//    public Page<IncidentResponse> getAllIncidents(Pageable pageable, String incidentType, String severity, String state, String priority) {
-//        try {
-//            CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-//            CriteriaQuery<Incident> criteriaQuery = criteriaBuilder.createQuery(Incident.class);
-//            Root<Incident> root = criteriaQuery.from(Incident.class);
-//
-//            List<Predicate> predicates = new ArrayList<>();
-//            if (incidentType != null) {
-//                predicates.add(criteriaBuilder.equal(root.get("incidentType"), incidentType));
-//            }
-//            if (severity != null) {
-//                predicates.add(criteriaBuilder.equal(root.get("severity"), severity));
-//            }
-//            if (state != null) {
-//                predicates.add(criteriaBuilder.equal(root.get("state"), state));
-//            }
-//            if(priority != null) {
-//                predicates.add(criteriaBuilder.equal(root.get("priority"), priority));
-//            }
-//
-//            criteriaQuery.where(criteriaBuilder.and(predicates.toArray(new Predicate[0])));
-//
-//            // Debugging statements
-////            System.out.println("CriteriaQuery: " + criteriaQuery);
-////            System.out.println("Predicates: " + predicates);
-//
-//            // Create the TypedQuery
-//            TypedQuery<Incident> query = entityManager.createQuery(criteriaQuery);
-//            if (query == null) {
-//                throw new IllegalStateException("TypedQuery is null");
-//            }
-//
-//            List<Incident> incidents = entityManager.createQuery(criteriaQuery)
-//                    .setFirstResult((int) pageable.getOffset())
-//                    .setMaxResults(pageable.getPageSize())
-//                    .getResultList();
-//
-//            long total = entityManager.createQuery(criteriaQuery).getResultList().size();
-//
-//            Page<Incident> incidentPage = new PageImpl<>(incidents, pageable, total);
-//
-//            return incidentPage.map(this::convertToResponse);
-//        } catch (DataAccessException ex) {
-//            throw new DatabaseConnectionException("Failed to connect to the database.");
-//        }
-//    }
+    public static String capitalizeFirstLetter(String input) {
+        if(input == null || input.isEmpty()) {
+            return input;
+        }
+
+        return input.substring(0, 1).toUpperCase() + input.substring(1).toLowerCase();
+    }
 
     public Page<IncidentResponse> getAllIncidents(Pageable pageable, String incidentType, String severity, String state, String priority) {
         try {
@@ -130,16 +91,29 @@ public class IncidentService {
                 predicates.add(criteriaBuilder.equal(root.get("incidentType"), incidentType));
             }
             if (severity != null) {
-                predicates.add(criteriaBuilder.equal(root.get("severity"), IncidentEnums.Severity.valueOf(severity.toUpperCase())));
+                try {
+                    String formattedSeverity = capitalizeFirstLetter(severity);
+                    predicates.add(criteriaBuilder.equal(root.get("severity"), IncidentEnums.Severity.valueOf(formattedSeverity)));
+                }
+                catch (IllegalArgumentException ex) {
+                    throw new InvalidFilterException("Invalid Severity value, please chose from these: Critical, High, Medium, Low");
+                }
             }
             if (state != null) {
-                predicates.add(criteriaBuilder.equal(root.get("state"), IncidentEnums.State.valueOf(state.toUpperCase())));
+                try {
+                    String formattedState = capitalizeFirstLetter(state);
+                    predicates.add(criteriaBuilder.equal(root.get("state"), IncidentEnums.State.valueOf(formattedState)));
+                }
+                catch (IllegalArgumentException ex) {
+                    throw new InvalidFilterException("Invalid State value, please chose from these: Open, Close, In_Progress");
+                }
             }
             if (priority != null) {
                 try {
-                    predicates.add(criteriaBuilder.equal(root.get("priority"), IncidentEnums.Priority.valueOf(priority.toUpperCase())));
-                } catch (IllegalArgumentException e) {
-                    throw new InvalidFilterException("Invalid priority value: " + priority);
+                    String formattedPriority = capitalizeFirstLetter(priority);
+                    predicates.add(criteriaBuilder.equal(root.get("priority"), IncidentEnums.Priority.valueOf(formattedPriority)));
+                } catch (IllegalArgumentException ex) {
+                    throw new InvalidFilterException("Invalid priority value, please chose from these: High, Medium, Low");
                 }
             }
 
@@ -159,6 +133,49 @@ public class IncidentService {
             throw new DatabaseConnectionException("Failed to connect to the database.");
         }
     }
+
+
+//    public Page<IncidentResponse> getAllIncidents(Pageable pageable, String incidentType, String severity, String state, String priority) {
+//        try {
+//            CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+//            CriteriaQuery<Incident> criteriaQuery = criteriaBuilder.createQuery(Incident.class);
+//            Root<Incident> root = criteriaQuery.from(Incident.class);
+//
+//            List<Predicate> predicates = new ArrayList<>();
+//            if (incidentType != null) {
+//                predicates.add(criteriaBuilder.equal(root.get("incidentType"), incidentType));
+//            }
+//            if (severity != null) {
+//                predicates.add(criteriaBuilder.equal(root.get("severity"), IncidentEnums.Severity.valueOf(severity.toUpperCase())));
+//            }
+//            if (state != null) {
+//                predicates.add(criteriaBuilder.equal(root.get("state"), IncidentEnums.State.valueOf(state.toUpperCase())));
+//            }
+//            if (priority != null) {
+//                try {
+////                    System.out.println("priority: " + priority);
+//                    predicates.add(criteriaBuilder.equal(root.get("priority"), IncidentEnums.Priority.valueOf(priority.toUpperCase())));
+//                } catch (IllegalArgumentException e) {
+//                    throw new InvalidFilterException("Invalid priority value: " + priority);
+//                }
+//            }
+//
+//            criteriaQuery.where(criteriaBuilder.and(predicates.toArray(new Predicate[0])));
+//
+//            List<Incident> incidents = entityManager.createQuery(criteriaQuery)
+//                    .setFirstResult((int) pageable.getOffset())
+//                    .setMaxResults(pageable.getPageSize())
+//                    .getResultList();
+//
+//            long total = entityManager.createQuery(criteriaQuery).getResultList().size();
+//
+//            Page<Incident> incidentPage = new PageImpl<>(incidents, pageable, total);
+//
+//            return incidentPage.map(this::convertToResponse);
+//        } catch (DataAccessException ex) {
+//            throw new DatabaseConnectionException("Failed to connect to the database.");
+//        }
+//    }
 
     public IncidentResponse getIncidentByUuid(String uuid) {
         Incident incident = incidentRepository.findByUuid(uuid);
