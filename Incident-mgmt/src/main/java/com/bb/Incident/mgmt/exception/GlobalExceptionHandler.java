@@ -74,6 +74,11 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(InvalidFilterException.class)
+    public ResponseEntity<String> handleInvalidFilterException(InvalidFilterException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
 //    Database Exception
 
     @ExceptionHandler(DatabaseConnectionException.class)

@@ -30,11 +30,13 @@ public class Incident {
     @Column(name = "description", nullable = false)
     private String description;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "severity", nullable = false)
-    private String severity;
+    private IncidentEnums.Severity severity;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "state", nullable = false)
-    private String state;
+    private IncidentEnums.State state;
 
     @Column(name = "sha256")
     private String sha256;
@@ -53,8 +55,9 @@ public class Incident {
     @Column(name = "date_resolved")
     private LocalDateTime dateResolved;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "priority", nullable = false)
-    private String priority;
+    private IncidentEnums.Priority priority;
 
     @ManyToOne
     @JoinColumn(name = "reported_by_tenant_id", nullable = false)

@@ -37,7 +37,7 @@ public class AuthService {
             throw new Exception("Missing or invalid Authorization header");
         }
 
-//        System.out.println("AuthHeader: " + authHeader);  encoded value 
+//        System.out.println("AuthHeader: " + authHeader);  encoded value
         // have to decode this authHeader to get the credentials
         String base64Credentials = authHeader.substring(6);
         String credentials = new String(Base64.getDecoder().decode(base64Credentials));
@@ -62,7 +62,8 @@ public class AuthService {
                     new UsernamePasswordAuthenticationToken(username, password)
             );
         } catch (BadCredentialsException e) {
-            System.out.println("hii");
+            // it is not reaching till here, will have to look into this
+            System.out.println("Entered wrong username or password.");
             throw new AuthenticationFailedException("Incorrect username or password", e);
         }
 

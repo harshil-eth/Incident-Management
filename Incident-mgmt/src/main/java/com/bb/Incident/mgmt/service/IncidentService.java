@@ -1,6 +1,7 @@
 package com.bb.Incident.mgmt.service;
 
 import com.bb.Incident.mgmt.entity.Incident;
+import com.bb.Incident.mgmt.entity.IncidentEnums;
 import com.bb.Incident.mgmt.entity.Tenant;
 import com.bb.Incident.mgmt.entity.User;
 import com.bb.Incident.mgmt.exception.*;
@@ -71,6 +72,53 @@ public class IncidentService {
 //       }
 //    }
 
+//    public Page<IncidentResponse> getAllIncidents(Pageable pageable, String incidentType, String severity, String state, String priority) {
+//        try {
+//            CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+//            CriteriaQuery<Incident> criteriaQuery = criteriaBuilder.createQuery(Incident.class);
+//            Root<Incident> root = criteriaQuery.from(Incident.class);
+//
+//            List<Predicate> predicates = new ArrayList<>();
+//            if (incidentType != null) {
+//                predicates.add(criteriaBuilder.equal(root.get("incidentType"), incidentType));
+//            }
+//            if (severity != null) {
+//                predicates.add(criteriaBuilder.equal(root.get("severity"), severity));
+//            }
+//            if (state != null) {
+//                predicates.add(criteriaBuilder.equal(root.get("state"), state));
+//            }
+//            if(priority != null) {
+//                predicates.add(criteriaBuilder.equal(root.get("priority"), priority));
+//            }
+//
+//            criteriaQuery.where(criteriaBuilder.and(predicates.toArray(new Predicate[0])));
+//
+//            // Debugging statements
+////            System.out.println("CriteriaQuery: " + criteriaQuery);
+////            System.out.println("Predicates: " + predicates);
+//
+//            // Create the TypedQuery
+//            TypedQuery<Incident> query = entityManager.createQuery(criteriaQuery);
+//            if (query == null) {
+//                throw new IllegalStateException("TypedQuery is null");
+//            }
+//
+//            List<Incident> incidents = entityManager.createQuery(criteriaQuery)
+//                    .setFirstResult((int) pageable.getOffset())
+//                    .setMaxResults(pageable.getPageSize())
+//                    .getResultList();
+//
+//            long total = entityManager.createQuery(criteriaQuery).getResultList().size();
+//
+//            Page<Incident> incidentPage = new PageImpl<>(incidents, pageable, total);
+//
+//            return incidentPage.map(this::convertToResponse);
+//        } catch (DataAccessException ex) {
+//            throw new DatabaseConnectionException("Failed to connect to the database.");
+//        }
+//    }
+
     public Page<IncidentResponse> getAllIncidents(Pageable pageable, String incidentType, String severity, String state, String priority) {
         try {
             CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
@@ -82,26 +130,20 @@ public class IncidentService {
                 predicates.add(criteriaBuilder.equal(root.get("incidentType"), incidentType));
             }
             if (severity != null) {
-                predicates.add(criteriaBuilder.equal(root.get("severity"), severity));
+                predicates.add(criteriaBuilder.equal(root.get("severity"), IncidentEnums.Severity.valueOf(severity.toUpperCase())));
             }
             if (state != null) {
-                predicates.add(criteriaBuilder.equal(root.get("state"), state));
+                predicates.add(criteriaBuilder.equal(root.get("state"), IncidentEnums.State.valueOf(state.toUpperCase())));
             }
-            if(priority != null) {
-                predicates.add(criteriaBuilder.equal(root.get("priority"), priority));
+            if (priority != null) {
+                try {
+                    predicates.add(criteriaBuilder.equal(root.get("priority"), IncidentEnums.Priority.valueOf(priority.toUpperCase())));
+                } catch (IllegalArgumentException e) {
+                    throw new InvalidFilterException("Invalid priority value: " + priority);
+                }
             }
 
             criteriaQuery.where(criteriaBuilder.and(predicates.toArray(new Predicate[0])));
-
-            // Debugging statements
-//            System.out.println("CriteriaQuery: " + criteriaQuery);
-//            System.out.println("Predicates: " + predicates);
-
-            // Create the TypedQuery
-            TypedQuery<Incident> query = entityManager.createQuery(criteriaQuery);
-            if (query == null) {
-                throw new IllegalStateException("TypedQuery is null");
-            }
 
             List<Incident> incidents = entityManager.createQuery(criteriaQuery)
                     .setFirstResult((int) pageable.getOffset())
@@ -259,8 +301,8 @@ public class IncidentService {
         // SOC tenant can only delete the incident, that has been taken care by authorization
 
         // have to put a check if incident is in open STATE or not, if open you can't delete
-        if(Objects.equals(existingIncident.getState(), "Open")) {
-            throw new OpenIncidentsException("Incident is in open state, so can not delete.");
+        if(existingIncident.getState() == IncidentEnums.State.Open) {
+            throw new OpenIncidentsException("Incident is not resolved yet, so can not delete.");
         }
 
         incidentRepository.delete(existingIncident);
@@ -268,19 +310,17 @@ public class IncidentService {
 
     public boolean hasOpenIncidents(String tenantUuid) {
         List<Incident> incidents = incidentRepository.findByReportedByTenantUuid(tenantUuid);
-        return incidents.stream().anyMatch(incident -> "Open".equalsIgnoreCase(incident.getState()));
+        return incidents.stream().anyMatch(incident -> incident.getState() == IncidentEnums.State.Open);
     }
 
     public List<IncidentResponse> getOpenIncidents() {
         List<Incident> incidents = incidentRepository.findAll();
-        List<Incident> openIncidents = incidents.stream().filter(incident -> "Open".equalsIgnoreCase(incident.getState()))
+        List<Incident> openIncidents = incidents.stream().filter(incident -> incident.getState() == IncidentEnums.State.Open)
                 .toList();
 
         return openIncidents.stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
-
-        // one doubt -> what to give if there are no open incidents ??
     }
 
     @Transactional
@@ -291,7 +331,7 @@ public class IncidentService {
             throw new IncidentNotFoundException("Incident not found with UUID: " + uuid);
         }
 
-        incident.setState("Close");
+        incident.setState(IncidentEnums.State.Close);
         incident.setDateResolved(LocalDateTime.now());
         incidentRepository.save(incident);
 

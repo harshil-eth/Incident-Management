@@ -1,6 +1,9 @@
 package com.bb.Incident.mgmt.response;
 
 
+import com.bb.Incident.mgmt.entity.IncidentEnums;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -18,15 +21,18 @@ public class IncidentResponse {
 
     private String description;
 
-    private String severity;
+    @Enumerated(EnumType.STRING)
+    private IncidentEnums.Severity severity;
 
-    private String state;
+    @Enumerated(EnumType.STRING)
+    private IncidentEnums.State state;
 
     private String device;
 
     private String location;
 
-    private String priority;
+    @Enumerated(EnumType.STRING)
+    private IncidentEnums.Priority priority;
 
     private String sha256;
 
