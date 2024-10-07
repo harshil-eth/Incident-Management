@@ -87,25 +87,30 @@ public class UserService {
         return convertToResponse(savedUser);
     }
 
-
     @Transactional
     public UserResponse updateUser(String uuid, UpdateUserRequest updateUserRequest) {
+
+        if(updateUserRequest == null) {
+            throw new IllegalArgumentException("Update user request can not be null.");
+        }
+
         User existingUser = userRepository.findByUuid(uuid);
 
         if (existingUser == null) {
             throw new UserNotFoundException("User not found with UUID: " + uuid);
         }
 
-        if (existingUser.getUsername() != null) {
+        // Update fields only if they are not null in the updateUserRequest
+        if (updateUserRequest.getUsername() != null) {
             existingUser.setUsername(updateUserRequest.getUsername());
         }
-        if (existingUser.getEmail() != null) {
+        if (updateUserRequest.getEmail() != null) {
             existingUser.setEmail(updateUserRequest.getEmail());
         }
-        if (existingUser.getFirstName() != null) {
+        if (updateUserRequest.getFirstName() != null) {
             existingUser.setFirstName(updateUserRequest.getFirstName());
         }
-        if (existingUser.getLastName() != null) {
+        if (updateUserRequest.getLastName() != null) {
             existingUser.setLastName(updateUserRequest.getLastName());
         }
 

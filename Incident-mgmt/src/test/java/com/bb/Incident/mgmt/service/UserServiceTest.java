@@ -135,6 +135,80 @@ public class UserServiceTest {
         assertThrows(UserAlreadyExistsException.class, () -> userService.createUser(user));
     }
 
+    @Test
+    public void testCreateUser_MissingTenantInformation() {
+        User user = new User();
+        user.setUsername("testuser");
+        user.setEmail("testuser@example.com");
+        user.setFirstName("Test");
+        user.setLastName("User");
+
+        assertThrows(IllegalArgumentException.class, () -> userService.createUser(user));
+    }
+
+    @Test
+    public void testCreateUser_InvalidTenantUUID() {
+        User user = new User();
+        user.setUuid(UUID.randomUUID().toString());
+        user.setUsername("testuser");
+        user.setEmail("testuser@example.com");
+        user.setFirstName("Test");
+        user.setLastName("User");
+        user.setTenant(new Tenant());
+
+        when(tenantRepository.findByUuid(anyString())).thenReturn(null);
+
+        assertThrows(IllegalArgumentException.class, () -> userService.createUser(user));
+    }
+
+    @Test
+    public void testUpdateUser_NullFieldsInUpdateRequest() {
+        String uuid = UUID.randomUUID().toString();
+        User existingUser = new User();
+        existingUser.setUuid(uuid);
+        existingUser.setUsername("testuser");
+        existingUser.setEmail("testuser@example.com");
+        existingUser.setFirstName("Test");
+        existingUser.setLastName("User");
+
+        UpdateUserRequest updateUserRequest = new UpdateUserRequest();
+        // All fields are null
+
+        when(userRepository.findByUuid(uuid)).thenReturn(existingUser);
+        when(userRepository.save(any(User.class))).thenReturn(existingUser);
+
+        UserResponse result = userService.updateUser(uuid, updateUserRequest);
+
+        assertNotNull(result);
+        assertEquals("testuser", result.getUsername());
+        assertEquals("testuser@example.com", result.getEmail());
+        assertEquals("Test", result.getFirstName());
+        assertEquals("User", result.getLastName());
+    }
+
+    @Test
+    public void testGetRandomUser_NoUsersExist() {
+        when(userRepository.findAll()).thenReturn(Collections.emptyList());
+
+        assertThrows(UserNotFoundException.class, () -> userService.getRandomUser());
+    }
+
+    @Test
+    public void testGetRandomUser_UsersExist() {
+        User user = new User();
+        user.setUuid(UUID.randomUUID().toString());
+        user.setUsername("testuser");
+        user.setEmail("testuser@example.com");
+        user.setFirstName("Test");
+        user.setLastName("User");
+
+        when(userRepository.findAll()).thenReturn(Collections.singletonList(user));
+
+        String randomUserUuid = userService.getRandomUser();
+
+        assertNotNull(randomUserUuid);
+        assertEquals(user.getUuid(), randomUserUuid);
+    }
 
     @Test
     public void testUpdateUser_UserExists() {
