@@ -235,5 +235,44 @@ public class IncidentServiceTest {
 
         assertThrows(UserAlreadyExistsException.class, () -> incidentService.assignUser(uuid));
     }
+
+    @Test
+    public void testCreateIncident_InvalidData() {
+        Incident incident = new Incident(); // Missing required fields
+
+        assertThrows(InvalidIncidentDataException.class, () -> incidentService.createIncident(incident));
+    }
+
+    @Test
+    public void testUpdateIncident_NotFound() {
+        String uuid = "non-existent-uuid";
+        UpdateIncidentRequest request = new UpdateIncidentRequest();
+
+        when(incidentRepository.findByUuid(uuid)).thenReturn(null);
+
+        assertThrows(IncidentNotFoundException.class, () -> incidentService.updateIncident(uuid, request));
+    }
+
+    @Test
+    public void testResolveIncident_NotFound() {
+        String uuid = "non-existent-uuid";
+
+        when(incidentRepository.findByUuid(uuid)).thenReturn(null);
+
+        assertThrows(IncidentNotFoundException.class, () -> incidentService.resolveIncident(uuid));
+    }
+
+    @Test
+    public void testAssignUser_UserNotFound() {
+        String uuid = "test-uuid";
+        Incident incident = new Incident();
+        incident.setUuid(uuid);
+
+        when(incidentRepository.findByUuid(uuid)).thenReturn(incident);
+        when(userService.getRandomUser()).thenReturn("non-existent-user-uuid");
+        when(userRepository.findByUuid("non-existent-user-uuid")).thenReturn(null);
+
+        assertThrows(UserNotFoundException.class, () -> incidentService.assignUser(uuid));
+    }
 }
 
