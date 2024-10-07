@@ -1,6 +1,7 @@
 package com.bb.Incident.mgmt.service;
 
 import com.bb.Incident.mgmt.entity.Incident;
+import com.bb.Incident.mgmt.entity.IncidentEnums;
 import com.bb.Incident.mgmt.entity.Tenant;
 import com.bb.Incident.mgmt.entity.User;
 import com.bb.Incident.mgmt.exception.*;
@@ -191,7 +192,7 @@ public class IncidentServiceTest {
         String uuid = "test-uuid";
         Incident incident = new Incident();
         incident.setUuid(uuid);
-        incident.setState("Closed");
+        incident.setState(IncidentEnums.State.Close);
 
         when(incidentRepository.findByUuid(uuid)).thenReturn(incident);
 
@@ -205,7 +206,7 @@ public class IncidentServiceTest {
         String uuid = "test-uuid";
         Incident incident = new Incident();
         incident.setUuid(uuid);
-        incident.setState("Open");
+        incident.setState(IncidentEnums.State.Open);
 
         when(incidentRepository.findByUuid(uuid)).thenReturn(incident);
         when(incidentRepository.save(any(Incident.class))).thenReturn(incident);
@@ -213,7 +214,7 @@ public class IncidentServiceTest {
         IncidentResponse response = incidentService.resolveIncident(uuid);
 
         assertNotNull(response);
-        assertEquals("Close", response.getState());
+        assertEquals(IncidentEnums.State.Close, response.getState());
     }
 
     @Test

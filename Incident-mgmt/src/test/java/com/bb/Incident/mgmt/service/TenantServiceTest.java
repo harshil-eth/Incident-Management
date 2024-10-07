@@ -97,6 +97,88 @@ public class TenantServiceTest {
     }
 
     @Test
+    public void testCreateTenantWithExistingUsername() {
+        when(tenantRepository.existsByUsername(tenant.getUsername())).thenReturn(true);
+
+        Exception exception = assertThrows(TenantAlreadyExistsException.class, () -> {
+            tenantService.createTenant(tenant);
+        });
+
+        assertEquals("Tenant already exists with username: " + tenant.getUsername(), exception.getMessage());
+    }
+
+    @Test
+    public void testCreateTenantWithExistingUuid() {
+        when(tenantRepository.findByUuid(tenant.getUuid())).thenReturn(tenant);
+
+        Exception exception = assertThrows(TenantAlreadyExistsException.class, () -> {
+            tenantService.createTenant(tenant);
+        });
+
+        assertEquals("Tenant already exists with UUID: " + tenant.getUuid(), exception.getMessage());
+    }
+
+    @Test
+    public void testDeleteSocTenant() {
+        tenant.setRoles("incident.get incident.create incident.update incident.delete");
+        when(tenantRepository.findByUuid(tenant.getUuid())).thenReturn(tenant);
+
+        Exception exception = assertThrows(SocTenantDeletionException.class, () -> {
+            tenantService.deleteTenant(tenant.getUuid());
+        });
+
+        assertEquals("Cannot delete a SOC Tenant.", exception.getMessage());
+    }
+
+    @Test
+    public void testDeleteTenantWithOpenIncidents() {
+        when(tenantRepository.findByUuid(tenant.getUuid())).thenReturn(tenant);
+        when(incidentService.hasOpenIncidents(tenant.getUuid())).thenReturn(true);
+
+        Exception exception = assertThrows(OpenIncidentsException.class, () -> {
+            tenantService.deleteTenant(tenant.getUuid());
+        });
+
+        assertEquals("Cannot delete a Tenant with open incidents", exception.getMessage());
+    }
+
+    @Test
+    public void testUpdateNonExistentTenant() {
+        when(tenantRepository.findByUuid(tenant.getUuid())).thenReturn(null);
+
+        UpdateTenantRequest updateTenantRequest = new UpdateTenantRequest();
+        updateTenantRequest.setName("Updated Name");
+
+        Exception exception = assertThrows(TenantNotFoundException.class, () -> {
+            tenantService.updateTenant(tenant.getUuid(), updateTenantRequest);
+        });
+
+        assertEquals("Tenant not found with UUID: " + tenant.getUuid(), exception.getMessage());
+    }
+
+    @Test
+    public void testCreateNullTenant() {
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            tenantService.createTenant(null);
+        });
+
+        assertEquals("Tenant can not be null.", exception.getMessage());
+    }
+
+    @Test
+    public void testUpdateTenantWithNullRequest() {
+//        when(tenantRepository.findByUuid(tenant.getUuid())).thenReturn(tenant);
+
+        Mockito.lenient().when(tenantRepository.findByUuid(tenant.getUuid())).thenReturn(tenant);
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            tenantService.updateTenant(tenant.getUuid(), null);
+        });
+
+        assertTrue(exception.getMessage().contains("Update Tenant Request can not be null."));
+    }
+
+    @Test
     public void testUpdateTenant() {
         UpdateTenantRequest updateTenantRequest = new UpdateTenantRequest();
         updateTenantRequest.setName("Updated Name");

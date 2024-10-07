@@ -140,6 +140,10 @@ public class TenantService {
     // better way to update tenants
     @Transactional
     public TenantResponse updateTenant(String uuid, @Valid UpdateTenantRequest updateTenantRequest) {
+        if(updateTenantRequest == null) {
+            throw new IllegalArgumentException("Update Tenant Request can not be null.");
+        }
+
         Tenant existingTenant = tenantRepository.findByUuid(uuid);
         if (existingTenant == null) {
             throw new TenantNotFoundException("Tenant not found with UUID: " + uuid);
