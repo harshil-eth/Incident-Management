@@ -82,7 +82,6 @@ public class IncidentServiceTest {
         when(criteriaQuery.from(Incident.class)).thenReturn(root);
         when(entityManager.createQuery(criteriaQuery)).thenReturn(typedQuery);
 
-        // Ensure the TypedQuery returns itself when setFirstResult and setMaxResults are called
         when(typedQuery.setFirstResult(anyInt())).thenReturn(typedQuery);
         when(typedQuery.setMaxResults(anyInt())).thenReturn(typedQuery);
         when(typedQuery.getResultList()).thenReturn(incidents);
@@ -108,66 +107,32 @@ public class IncidentServiceTest {
         assertEquals(uuid, response.getUuid());
     }
 
-//    @Test
-//    public void testCreateIncident() {
-//        // Create Tenant and User objects
-//        Tenant tenant = new Tenant();
-//        tenant.setUuid("tenant-uuid");
-//        tenant.setName("Tenant Name");
-//        tenant.setDescription("Tenant Description");
-//        tenant.setParentSocTenantId("parent-soc-tenant-id");
-//        tenant.setUsername("tenant-username");
-//        tenant.setPassword("tenant-password");
-//
-//        User user = new User();
-//        user.setUuid("user-uuid");
-//        user.setUsername("user-username");
-//        user.setEmail("user@example.com");
-//        user.setFirstName("First");
-//        user.setLastName("Last");
-//        user.setTenant(tenant);
-//
-//        // Mock the repository methods
-//        when(tenantRepository.findByUuid("tenant-uuid")).thenReturn(tenant);
-//        when(userRepository.findByUuid("user-uuid")).thenReturn(user);
-//        when(incidentRepository.save(any(Incident.class))).thenAnswer(invocation -> invocation.getArgument(0));
-//
-//        // Create Incident object
-//        Incident incident = new Incident();
-//        incident.setIncidentType("Network Issue");
-//        incident.setDescription("Internet connectivity is down");
-//        incident.setSeverity("High");
-//        incident.setState("Open");
-//        incident.setDateReported(LocalDateTime.now());
-//        incident.setDevice("Router");
-//        incident.setLocation("Office");
-//        incident.setPriority("P1");
-//        incident.setSha256("some-sha256-hash");
-//
-//        // Set the Tenant and User objects
-//        incident.setReportedByTenant(tenant);
-//        incident.setAssignedToUser(user);
-//
-//        // Call the createIncident method
-//        Incident createdIncident = incidentService.createIncident(incident);
-//
-//        System.out.println("hi" + incident);
-//        System.out.println("hii" + createdIncident);
-//
-//        // Assertions
-//        assertNotNull(createdIncident);
-//        assertNotNull(createdIncident.getUuid());
-//        assertEquals("Network Issue", createdIncident.getIncidentType());
-//        assertEquals("Internet connectivity is down", createdIncident.getDescription());
-//        assertEquals("High", createdIncident.getSeverity());
-//        assertEquals("Open", createdIncident.getState());
-//        assertEquals("Router", createdIncident.getDevice());
-//        assertEquals("Office", createdIncident.getLocation());
-//        assertEquals("P1", createdIncident.getPriority());
-//        assertEquals("some-sha256-hash", createdIncident.getSha256());
-//        assertEquals("tenant-uuid", createdIncident.getReportedByTenant().getUuid());
-//        assertEquals("user-uuid", createdIncident.getAssignedToUser().getUuid());
-//    }
+    @Test
+    public void testCreateIncident() {
+        Tenant tenant = new Tenant();
+        tenant.setUuid("tenant-uuid");
+
+        User user = new User();
+        user.setUuid("user-uuid");
+
+        when(tenantRepository.findByUuid("tenant-uuid")).thenReturn(tenant);
+        when(userRepository.findByUuid("user-uuid")).thenReturn(user);
+        when(incidentRepository.save(any(Incident.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Incident incident = new Incident();
+        incident.setIncidentType("Network Issue");
+        incident.setDescription("Internet connectivity is down");
+        incident.setReportedByTenant(tenant);
+        incident.setAssignedToUser(user);
+
+        Incident createdIncident = incidentService.createIncident(incident);
+
+        assertNotNull(createdIncident);
+        assertEquals("Network Issue", createdIncident.getIncidentType());
+        assertEquals("Internet connectivity is down", createdIncident.getDescription());
+        assertEquals("tenant-uuid", createdIncident.getReportedByTenant().getUuid());
+        assertEquals("user-uuid", createdIncident.getAssignedToUser().getUuid());
+    }
 
     @Test
     public void testUpdateIncident() {
@@ -235,6 +200,40 @@ public class IncidentServiceTest {
 
         assertNotNull(response);
         assertEquals("user-uuid", response.getAssignedToUserId());
+    }
+
+    @Test
+    public void testGetIncidentByUuid_NotFound() {
+        String uuid = "non-existent-uuid";
+        when(incidentRepository.findByUuid(uuid)).thenReturn(null);
+
+        assertThrows(IncidentNotFoundException.class, () -> incidentService.getIncidentByUuid(uuid));
+    }
+
+    @Test
+    public void testDeleteIncident_OpenState() {
+        String uuid = "test-uuid";
+        Incident incident = new Incident();
+        incident.setUuid(uuid);
+        incident.setState(IncidentEnums.State.Open);
+
+        when(incidentRepository.findByUuid(uuid)).thenReturn(incident);
+
+        assertThrows(OpenIncidentsException.class, () -> incidentService.deleteIncident(uuid));
+    }
+
+    @Test
+    public void testAssignUser_UserAlreadyAssigned() {
+        String uuid = "test-uuid";
+        Incident incident = new Incident();
+        incident.setUuid(uuid);
+        User user = new User();
+        user.setUuid("user-uuid");
+        incident.setAssignedToUser(user);
+
+        when(incidentRepository.findByUuid(uuid)).thenReturn(incident);
+
+        assertThrows(UserAlreadyExistsException.class, () -> incidentService.assignUser(uuid));
     }
 }
 

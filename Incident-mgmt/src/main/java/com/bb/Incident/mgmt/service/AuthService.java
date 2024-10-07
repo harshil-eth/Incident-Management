@@ -62,7 +62,6 @@ public class AuthService {
                     new UsernamePasswordAuthenticationToken(username, password)
             );
         } catch (BadCredentialsException e) {
-            // it is not reaching till here, will have to look into this
             System.out.println("Entered wrong username or password.");
             throw new AuthenticationFailedException("Incorrect username or password", e);
         }

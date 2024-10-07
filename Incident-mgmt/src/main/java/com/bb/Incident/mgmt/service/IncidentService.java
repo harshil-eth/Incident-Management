@@ -50,28 +50,6 @@ public class IncidentService {
     @PersistenceContext
     private EntityManager entityManager;
 
-//    public IncidentService() {
-//        System.out.println("Entity Manager: " + entityManager);
-//    }
-
-//    public List<IncidentResponse> getAllIncidents() {
-//        try {
-//            List<Incident> incidents = incidentRepository.findAll();
-//            return incidents.stream().map(this::convertToResponse).collect(Collectors.toList());
-//        } catch (DataAccessException ex) {
-//            throw new DatabaseConnectionException("Failed to connect to the database.");
-//        }
-//    }
-
-//    public Page<IncidentResponse> getAllIncidents(Pageable pageable) {
-//       try {
-//            Page<Incident> incidents = incidentRepository.findAll(pageable);
-//            return incidents.map(this::convertToResponse);
-//       } catch (DataAccessException ex) {
-//           throw new DatabaseConnectionException("Failed to connect to the database.");
-//       }
-//    }
-
     public static String capitalizeFirstLetter(String input) {
         if(input == null || input.isEmpty()) {
             return input;
