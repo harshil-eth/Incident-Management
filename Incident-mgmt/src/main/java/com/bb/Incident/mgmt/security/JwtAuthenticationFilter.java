@@ -2,6 +2,7 @@ package com.bb.Incident.mgmt.security;
 
 import com.bb.Incident.mgmt.exception.AuthenticationFailedException;
 import com.bb.Incident.mgmt.exception.InvalidJwtTokenException;
+import com.bb.Incident.mgmt.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,6 +18,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import javax.security.sasl.AuthenticationException;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +28,8 @@ import java.util.stream.Collectors;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final UserDetailsService userDetailsService;
+
+//    private final CustomUserDetailsService userDetailsService;
     private final JwtUtil jwtUtil;
 
     @Autowired
@@ -40,10 +45,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String username = null;
         String jwt = null;
 
-        // skip auth for these apis
-        // or if have to auth this, then ->
-        // three ways to do this, that are, through hardcode username and password, or through soc tenant only, or through pre-defined roles
-
         if (request.getRequestURI().startsWith("/v1/tenants") ||
                 request.getRequestURI().startsWith("/v1/users") ||
                 request.getRequestURI().startsWith("/swagger-ui") ||
@@ -56,17 +57,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
                 jwt = authorizationHeader.substring(7);
                 username = jwtUtil.extractUsername(jwt);
-                logger.info("Extracted username: " + username);
             }
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
                 if (jwtUtil.validateToken(jwt, userDetails.getUsername())) {
-                    logger.info("Valid token for user: " + username);
                     List<String> roles = jwtUtil.extractRoles(jwt);
-                    logger.info("Roles: " + roles);
-
                     List<SimpleGrantedAuthority> authorities = roles.stream()
                             .map(SimpleGrantedAuthority::new)
                             .collect(Collectors.toList());
@@ -75,29 +72,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             userDetails, null, authorities);
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    logger.info("Authentication set for user: " + username);
                 } else {
-                    logger.warn("Invalid token for user: " + username);
                     throw new InvalidJwtTokenException("Invalid Jwt Token");
                 }
             } else if (authorizationHeader == null) {
-                logger.warn("No JWT token found in request headers");
                 throw new InvalidJwtTokenException("Unauthorized: No JWT token found");
             }
-        } catch (AuthenticationFailedException ex) {
-            logger.error("Authentication failed: ", ex);
+        } catch (AuthenticationFailedException | InvalidJwtTokenException ex) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write(ex.getMessage());
             response.getWriter().flush();
             return;
-        } catch (InvalidJwtTokenException e) {
-            logger.error("Invalid Jwt Token: ", e);
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write(e.getMessage());
-            response.getWriter().flush();
-            return;
         } catch (Exception e) {
-            logger.error("Authentication error: ", e);
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Unauthorized: Authentication error");
             response.getWriter().flush();
@@ -106,4 +92,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
+
 }

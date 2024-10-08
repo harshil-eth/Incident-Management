@@ -13,6 +13,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.lang.reflect.Method;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -261,4 +262,218 @@ public class TenantServiceTest {
 
         assertTrue(result);
     }
+
+    @Test
+    public void testGetTenantRolesByUsername_WithExistingUsername() {
+        String username = "testuser";
+        Tenant tenant = new Tenant();
+        tenant.setRoles("role1, role2");
+
+        when(tenantRepository.findByUsername(username)).thenReturn(tenant);
+
+        String roles = tenantService.getTenantRolesByUsername(username);
+
+        assertEquals("role1, role2", roles);
+    }
+
+    @Test
+    public void testGetTenantRolesByUsername_WithNonExistingUsername() {
+        String username = "nonexistentuser";
+
+        when(tenantRepository.findByUsername(username)).thenReturn(null);
+
+        String roles = tenantService.getTenantRolesByUsername(username);
+
+        assertNull(roles);
+    }
+
+    @Test
+    public void testDeleteTenant_WithValidUuid() {
+        String uuid = "valid-uuid";
+        Tenant tenant = new Tenant();
+        tenant.setUuid(uuid);
+
+        when(tenantRepository.findByUuid(uuid)).thenReturn(tenant);
+        when(incidentService.hasOpenIncidents(uuid)).thenReturn(false);
+
+        tenantService.deleteTenant(uuid);
+
+        verify(tenantRepository).deleteByUuid(uuid);
+    }
+
+    @Test
+    public void testDeleteTenant_WithSocTenant() {
+        String uuid = "soc-tenant-uuid";
+        Tenant tenant = new Tenant();
+        tenant.setUuid(uuid);
+        tenant.setRoles("incident.get incident.create incident.update incident.delete");
+
+        when(tenantRepository.findByUuid(uuid)).thenReturn(tenant);
+
+        Exception exception = assertThrows(SocTenantDeletionException.class, () -> {
+            tenantService.deleteTenant(uuid);
+        });
+
+        assertEquals("Cannot delete a SOC Tenant.", exception.getMessage());
+    }
+
+    @Test
+    public void testDeleteTenant_WithOpenIncidents() {
+        String uuid = "tenant-with-open-incidents";
+        Tenant tenant = new Tenant();
+        tenant.setUuid(uuid);
+
+        when(tenantRepository.findByUuid(uuid)).thenReturn(tenant);
+        when(incidentService.hasOpenIncidents(uuid)).thenReturn(true);
+
+        Exception exception = assertThrows(OpenIncidentsException.class, () -> {
+            tenantService.deleteTenant(uuid);
+        });
+
+        assertEquals("Cannot delete a Tenant with open incidents", exception.getMessage());
+    }
+
+    @Test
+    public void testDeleteTenant_WithNonExistentUuid() {
+        String uuid = "non-existent-uuid";
+
+        when(tenantRepository.findByUuid(uuid)).thenReturn(null);
+
+        Exception exception = assertThrows(TenantNotFoundException.class, () -> {
+            tenantService.deleteTenant(uuid);
+        });
+
+        assertEquals("Tenant not found with UUID: " + uuid, exception.getMessage());
+    }
+
+    @Test
+    public void testUpdateTenant_WithNullRequest() {
+        String uuid = "tenant-uuid";
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            tenantService.updateTenant(uuid, null);
+        });
+
+        assertEquals("Update Tenant Request can not be null.", exception.getMessage());
+    }
+
+    @Test
+    public void testUpdateTenant_WithNonExistentTenant() {
+        String uuid = "non-existent-uuid";
+        UpdateTenantRequest updateRequest = new UpdateTenantRequest();
+        updateRequest.setName("New Name");
+
+        when(tenantRepository.findByUuid(uuid)).thenReturn(null);
+
+        Exception exception = assertThrows(TenantNotFoundException.class, () -> {
+            tenantService.updateTenant(uuid, updateRequest);
+        });
+
+        assertEquals("Tenant not found with UUID: " + uuid, exception.getMessage());
+    }
+
+    @Test
+    public void testIsSocTenant() throws Exception {
+        // Given a tenant with SOC roles
+        Tenant socTenant = new Tenant();
+        socTenant.setRoles("incident.get incident.create incident.update incident.delete");
+
+        // Given a tenant with different roles
+        Tenant nonSocTenant = new Tenant();
+        nonSocTenant.setRoles("incident.get incident.create");
+
+        // Use reflection to access the private method
+        Method isSocTenantMethod = TenantService.class.getDeclaredMethod("isSocTenant", Tenant.class);
+        isSocTenantMethod.setAccessible(true); // Make the private method accessible
+
+        // When calling the method with a SOC tenant
+        boolean result1 = (boolean) isSocTenantMethod.invoke(tenantService, socTenant);
+        assertTrue(result1); // Should return true
+
+        // When calling the method with a non-SOC tenant
+        boolean result2 = (boolean) isSocTenantMethod.invoke(tenantService, nonSocTenant);
+        assertFalse(result2); // Should return false
+    }
+
+    @Test
+    public void testHasOpenIncidents() throws Exception {
+        // Given a tenant
+        Tenant tenant = new Tenant();
+        tenant.setUuid("tenant-uuid");
+
+        // Mock the incident service's behavior
+        when(incidentService.hasOpenIncidents(tenant.getUuid())).thenReturn(true);
+
+        // Use reflection to access the private method
+        Method hasOpenIncidentsMethod = TenantService.class.getDeclaredMethod("hasOpenIncidents", Tenant.class);
+        hasOpenIncidentsMethod.setAccessible(true); // Make the private method accessible
+
+        // When calling the method
+        boolean result = (boolean) hasOpenIncidentsMethod.invoke(tenantService, tenant);
+        assertTrue(result); // Should return true for open incidents
+
+        // Now test the case where there are no open incidents
+        when(incidentService.hasOpenIncidents(tenant.getUuid())).thenReturn(false);
+        result = (boolean) hasOpenIncidentsMethod.invoke(tenantService, tenant);
+        assertFalse(result); // Should return false for no open incidents
+    }
+
+    @Test
+    public void testUpdateTenant_Success() {
+        // Given an existing tenant
+        Tenant existingTenant = new Tenant();
+        existingTenant.setUuid("tenant-uuid");
+        existingTenant.setName("Old Name");
+        existingTenant.setDescription("Old Description");
+        existingTenant.setUsername("oldUsername");
+        existingTenant.setRoles("oldRoles");
+
+        // Mock the behavior of tenantRepository
+        when(tenantRepository.findByUuid(existingTenant.getUuid())).thenReturn(existingTenant);
+        when(tenantRepository.save(existingTenant)).thenReturn(existingTenant); // Simulate save
+
+        // Create an UpdateTenantRequest with new values
+        UpdateTenantRequest updateTenantRequest = new UpdateTenantRequest();
+        updateTenantRequest.setName("New Name");
+        updateTenantRequest.setDescription("New Description");
+        updateTenantRequest.setUsername("newUsername");
+        updateTenantRequest.setRoles("newRoles");
+
+        // When updating the tenant
+        TenantResponse response = tenantService.updateTenant(existingTenant.getUuid(), updateTenantRequest);
+
+        // Then the response should reflect the updated values
+        assertEquals("New Name", existingTenant.getName());
+        assertEquals("New Description", existingTenant.getDescription());
+        assertEquals("newUsername", existingTenant.getUsername());
+        assertEquals("newRoles", existingTenant.getRoles());
+        assertNotNull(response);
+    }
+
+    @Test
+    public void testUpdateTenant_NullRequest() {
+        // Given an existing tenant
+        String uuid = "tenant-uuid";
+
+        // Expecting an IllegalArgumentException
+        assertThrows(IllegalArgumentException.class, () -> {
+            tenantService.updateTenant(uuid, null);
+        });
+    }
+
+    @Test
+    public void testUpdateTenant_TenantNotFound() {
+        // Given a UUID that does not exist
+        String uuid = "non-existent-uuid";
+        UpdateTenantRequest updateTenantRequest = new UpdateTenantRequest();
+
+        // Mock the behavior of tenantRepository
+        when(tenantRepository.findByUuid(uuid)).thenReturn(null);
+
+        // Expecting a TenantNotFoundException
+        assertThrows(TenantNotFoundException.class, () -> {
+            tenantService.updateTenant(uuid, updateTenantRequest);
+        });
+    }
+
 }

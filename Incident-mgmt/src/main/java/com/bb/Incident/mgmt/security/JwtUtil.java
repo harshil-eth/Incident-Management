@@ -46,6 +46,7 @@ public class JwtUtil {
     }
 
     public String generateToken(String username, String roles) {
+        System.out.println("generateToken");
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", roles);
         System.out.println("Generating token for username " + username + " with roles: " + roles);
@@ -53,7 +54,7 @@ public class JwtUtil {
     }
 
     private String createToken(Map<String, Object> claims, String subject) {
-//        System.out.println(claims);
+        System.out.println("createToken");
         long now = System.currentTimeMillis();
         claims.put("sub", subject);
         claims.put("iat", now);

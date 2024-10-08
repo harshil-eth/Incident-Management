@@ -37,49 +37,24 @@ public class AuthService {
             throw new Exception("Missing or invalid Authorization header");
         }
 
-//        System.out.println("AuthHeader: " + authHeader);  encoded value
-        // have to decode this authHeader to get the credentials
         String base64Credentials = authHeader.substring(6);
         String credentials = new String(Base64.getDecoder().decode(base64Credentials));
-
-//        System.out.println("Credentials: " + credentials);
-
         String[] values = credentials.split(":", 2);
-
-//        System.out.println("Values: " + Arrays.toString(values));
 
         String username = values[0];
         String password = values[1];
 
-        System.out.println("1");
-
-        // in case of wrong username or password, its breaking before this
-        System.out.println("username:: " + username);
-        System.out.println("password:: " + password);
-
-        System.out.println("2");
-
-        // Authenticate tenant
         try {
-            System.out.println("3");
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password)
             );
-            System.out.println("4");
-
         } catch (BadCredentialsException e) {
-            System.out.println("5");
-            System.out.println("Entered wrong username or password.");
-            throw new AuthenticationFailedException("Incorrect username or password", e);
+            throw new AuthenticationFailedException("Invalid username or password", e);
         }
 
-        System.out.println("6");
-
-        // Load tenant details
         final UserDetails userDetails = userDetailsService.loadUserByUsername(username);
         final String roles = tenantService.getTenantRolesByUsername(username);
 
-        // Generating JWT token with tenant roles
         return jwtUtil.generateToken(userDetails.getUsername(), roles);
     }
 }

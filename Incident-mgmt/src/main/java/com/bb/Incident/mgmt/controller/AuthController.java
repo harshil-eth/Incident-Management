@@ -15,7 +15,10 @@ public class AuthController {
     private AuthService authService;
 
     @GetMapping("/tenant")
-    public String createAuthenticationToken(@RequestHeader("Authorization") String authHeader) throws Exception {
+    public String createAuthenticationToken(@RequestHeader(value = "Authorization", required = false) String authHeader) throws Exception {
+        if (authHeader == null || !authHeader.startsWith("Basic ")) {
+            throw new Exception("Missing or invalid Authorization header");
+        }
         return authService.createAuthenticationToken(authHeader);
     }
 }
