@@ -9,7 +9,9 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -31,6 +33,7 @@ public class TenantService {
     @Autowired
     private IncidentService incidentService;
 
+    // without pagination
 //    public List<TenantResponse> getAllTenants() {
 //        try {
 //            List<Tenant> tenants = tenantRepository.findAll();
@@ -42,6 +45,9 @@ public class TenantService {
 
     public Page<TenantResponse> getAllTenants(Pageable pageable) {
         try {
+//            if (pageable.getSort().isUnsorted()) {
+//                pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("name").ascending());
+//            }
             Page<Tenant> tenants = tenantRepository.findAll(pageable);
             return tenants.map(this::convertToResponse);
         } catch (DataAccessException ex) {

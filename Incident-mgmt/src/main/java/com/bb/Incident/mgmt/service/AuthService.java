@@ -51,20 +51,29 @@ public class AuthService {
         String username = values[0];
         String password = values[1];
 
+        System.out.println("1");
+
         // in case of wrong username or password, its breaking before this
         System.out.println("username:: " + username);
         System.out.println("password:: " + password);
 
+        System.out.println("2");
+
         // Authenticate tenant
         try {
-            System.out.println("bye");
+            System.out.println("3");
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password)
             );
+            System.out.println("4");
+
         } catch (BadCredentialsException e) {
+            System.out.println("5");
             System.out.println("Entered wrong username or password.");
             throw new AuthenticationFailedException("Incorrect username or password", e);
         }
+
+        System.out.println("6");
 
         // Load tenant details
         final UserDetails userDetails = userDetailsService.loadUserByUsername(username);

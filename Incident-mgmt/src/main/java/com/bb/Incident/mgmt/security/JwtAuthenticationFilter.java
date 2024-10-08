@@ -1,5 +1,6 @@
 package com.bb.Incident.mgmt.security;
 
+import com.bb.Incident.mgmt.exception.AuthenticationFailedException;
 import com.bb.Incident.mgmt.exception.InvalidJwtTokenException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -43,22 +44,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // or if have to auth this, then ->
         // three ways to do this, that are, through hardcode username and password, or through soc tenant only, or through pre-defined roles
 
-        if (request.getRequestURI().startsWith("/v1/tenants")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        if(request.getRequestURI().startsWith("/v1/users")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        if(request.getRequestURI().startsWith("/swagger-ui")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        if(request.getRequestURI().startsWith("/v3/api-docs")) {
+        if (request.getRequestURI().startsWith("/v1/tenants") ||
+                request.getRequestURI().startsWith("/v1/users") ||
+                request.getRequestURI().startsWith("/swagger-ui") ||
+                request.getRequestURI().startsWith("/v3/api-docs")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -95,7 +84,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 logger.warn("No JWT token found in request headers");
                 throw new InvalidJwtTokenException("Unauthorized: No JWT token found");
             }
-
+        } catch (AuthenticationFailedException ex) {
+            logger.error("Authentication failed: ", ex);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write(ex.getMessage());
+            response.getWriter().flush();
+            return;
         } catch (InvalidJwtTokenException e) {
             logger.error("Invalid Jwt Token: ", e);
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
