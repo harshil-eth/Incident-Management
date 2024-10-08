@@ -81,6 +81,10 @@ public class TenantService {
             throw new IllegalArgumentException("Tenant can not be null.");
         }
 
+        if(tenant.getPassword() == null) {
+            throw new IllegalArgumentException("Tenant Password cannot be null.");
+        }
+
         if(tenantRepository.existsByUsername(tenant.getUsername())) {
             throw new TenantAlreadyExistsException("Tenant already exists with username: " + tenant.getUsername());
         }

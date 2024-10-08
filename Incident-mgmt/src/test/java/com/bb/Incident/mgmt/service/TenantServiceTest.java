@@ -74,6 +74,19 @@ public class TenantServiceTest {
     }
 
     @Test
+    public void testGetAllTenants_DatabaseAccessException() {
+        Pageable pageable = PageRequest.of(0, 5);
+
+        when(tenantRepository.findAll(pageable)).thenThrow(new DataAccessException("Database access error") {});
+
+        Exception exception = assertThrows(DatabaseConnectionException.class, () -> {
+            tenantService.getAllTenants(pageable);
+        });
+
+        assertEquals("Failed to connect to the database.", exception.getMessage());
+    }
+
+    @Test
     public void testGetTenantByUuid() {
         when(tenantRepository.findByUuid(tenant.getUuid())).thenReturn(tenant);
 
@@ -81,6 +94,17 @@ public class TenantServiceTest {
 
         assertNotNull(result);
         assertEquals(tenant.getUuid(), result.getUuid());
+    }
+
+    @Test
+    public void testGetTenantByUuid_NotFound() {
+        when(tenantRepository.findByUuid(tenant.getUuid())).thenReturn(null);
+
+        Exception exception = assertThrows(TenantNotFoundException.class, () -> {
+            tenantService.getTenantByUuid(tenant.getUuid());
+        });
+
+        assertEquals("Tenant not found with UUID: " + tenant.getUuid(), exception.getMessage());
     }
 
     @Test
@@ -140,6 +164,17 @@ public class TenantServiceTest {
         });
 
         assertEquals("Cannot delete a Tenant with open incidents", exception.getMessage());
+    }
+
+    @Test
+    public void testDeleteNonExistentTenant() {
+        when(tenantRepository.findByUuid(tenant.getUuid())).thenReturn(null);
+
+        Exception exception = assertThrows(TenantNotFoundException.class, () -> {
+            tenantService.deleteTenant(tenant.getUuid());
+        });
+
+        assertEquals("Tenant not found with UUID: " + tenant.getUuid(), exception.getMessage());
     }
 
     @Test
