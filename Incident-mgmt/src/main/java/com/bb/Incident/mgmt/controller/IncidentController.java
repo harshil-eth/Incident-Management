@@ -25,20 +25,6 @@ public class IncidentController {
     @Autowired
     private IncidentService incidentService;
 
-//    @Operation(summary = "Get all incidents", description = "Returns a list of all incidents")
-//    @GetMapping
-//    @PreAuthorize("hasAuthority('incident.get')")
-//    public List<IncidentResponse> getAllIncidents() {
-//        return incidentService.getAllIncidents();
-//    }
-
-//    @Operation(summary = "Get all incidents", description = "Returns a list of all incidents")
-//    @GetMapping
-//    @PreAuthorize("hasAuthority('incident.get')")
-//    public Page<IncidentResponse> getAllIncidents(@PageableDefault(size = 5) Pageable pageable) {
-//        return incidentService.getAllIncidents(pageable);
-//    }
-
     @Operation(summary = "Get all incidents", description = "Returns a paginated list of all incidents")
     @GetMapping
     @PreAuthorize("hasAuthority('incident.get')")
