@@ -55,6 +55,7 @@ public class SecurityConfig {
                                 .requestMatchers("/v1/tenants/**").permitAll()
                                 .requestMatchers("/v1/users/**").permitAll()
                                 .requestMatchers("/v1/incidents/**").hasAnyAuthority("incident.get", "incident.create", "incident.update", "incident.delete")
+                                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                                 .anyRequest().permitAll()
                 )
                 .csrf(csrf -> csrf.disable()) // Disable CSRF for simplicity in this example
