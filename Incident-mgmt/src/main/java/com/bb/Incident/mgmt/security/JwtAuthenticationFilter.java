@@ -28,8 +28,6 @@ import java.util.stream.Collectors;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final UserDetailsService userDetailsService;
-
-//    private final CustomUserDetailsService userDetailsService;
     private final JwtUtil jwtUtil;
 
     @Autowired
@@ -92,5 +90,4 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
-
 }

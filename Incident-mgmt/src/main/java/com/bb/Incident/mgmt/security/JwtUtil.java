@@ -14,10 +14,10 @@ import java.util.*;
 public class JwtUtil {
 
     @Value("${jwt.secret}")
-    private String secret;
+    String secret;
 
     @Value("${jwt.expiration}")
-    private Long expiration;
+    Long expiration;
 
     public String extractUsername(String token) {
         return extractClaim(token, "sub");
@@ -46,7 +46,6 @@ public class JwtUtil {
     }
 
     public String generateToken(String username, String roles) {
-        System.out.println("generateToken");
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", roles);
         System.out.println("Generating token for username " + username + " with roles: " + roles);
@@ -54,7 +53,6 @@ public class JwtUtil {
     }
 
     private String createToken(Map<String, Object> claims, String subject) {
-        System.out.println("createToken");
         long now = System.currentTimeMillis();
         claims.put("sub", subject);
         claims.put("iat", now);

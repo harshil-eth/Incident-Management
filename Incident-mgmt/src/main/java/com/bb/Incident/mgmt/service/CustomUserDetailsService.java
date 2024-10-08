@@ -34,7 +34,6 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .username(tenant.getUsername())
                 .password(tenant.getPassword())
                 .authorities(authorities)
-//                .roles(tenant.getRoles().split(","))
                 .build();
     }
 }
