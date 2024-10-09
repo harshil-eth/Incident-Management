@@ -7,7 +7,6 @@ import com.bb.Incident.mgmt.security.JwtUtil;
 import com.bb.Incident.mgmt.service.IncidentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -54,6 +53,7 @@ public class IncidentControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = "incident.get")
     public void testGetAllIncidents() throws Exception {
         IncidentResponse incident1 = new IncidentResponse();
         incident1.setUuid("1");
