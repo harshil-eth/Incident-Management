@@ -116,8 +116,8 @@ public class GlobalExceptionHandlerTest {
 
     @Test
     void handleAccessDeniedException_ShouldReturnForbidden() {
-        AccessDeniedException ex = new AccessDeniedException("Access denied");
-        ResponseEntity<String> response = globalExceptionHandler.handleAccessDeniedException(ex);
+        CustomAccessDeniedException ex = new CustomAccessDeniedException("Access denied");
+        ResponseEntity<String> response = globalExceptionHandler.handleCustomAccessDeniedException(ex);
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
         assertEquals("Access denied", response.getBody());
     }

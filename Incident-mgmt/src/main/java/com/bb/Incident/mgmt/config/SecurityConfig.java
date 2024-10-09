@@ -58,7 +58,7 @@ public class SecurityConfig {
                                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                                 .anyRequest().permitAll()
                 )
-                .csrf(csrf -> csrf.disable()) // Disable CSRF for simplicity in this example
+                .csrf(csrf -> csrf.disable())
                 .sessionManagement(sessionManagement ->
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
@@ -87,9 +87,4 @@ public class SecurityConfig {
         entryPoint.setRealmName("tenant-api-realm");
         return entryPoint;
     }
-
-//    @Bean
-//    public AccessDeniedHandler accessDeniedHandler() {
-//        return new CustomAccessDeniedHandler();
-//    }
 }

@@ -1,6 +1,7 @@
 package com.bb.Incident.mgmt.controller;
 
 import com.bb.Incident.mgmt.entity.Incident;
+import com.bb.Incident.mgmt.exception.CustomAccessDeniedException;
 import com.bb.Incident.mgmt.request.UpdateIncidentRequest;
 import com.bb.Incident.mgmt.response.IncidentResponse;
 import com.bb.Incident.mgmt.service.IncidentService;
@@ -12,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -35,6 +38,11 @@ public class IncidentController {
             @RequestParam(required = false) String state,
             @RequestParam(required = false) String priority
     ) {
+
+//        if (!SecurityContextHolder.getContext().getAuthentication().getAuthorities().contains(new SimpleGrantedAuthority("incident.get"))) {
+//            throw new CustomAccessDeniedException("You need special permissions to get incidents.");
+//        }
+
         Page<IncidentResponse> page = incidentService.getAllIncidents(pageable, incidentType, severity, state, priority);
         Map<String, Object> response = new HashMap<>();
         response.put("incidents", page.getContent());
