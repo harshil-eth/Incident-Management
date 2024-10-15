@@ -53,7 +53,9 @@ public class AuthService {
         }
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        System.out.println("inside authservice, userDetails: " + userDetails);
         final String roles = tenantService.getTenantRolesByUsername(username);
+        System.out.println("inside authservice, roles: " + roles);
 
         return jwtUtil.generateToken(userDetails.getUsername(), roles);
     }
